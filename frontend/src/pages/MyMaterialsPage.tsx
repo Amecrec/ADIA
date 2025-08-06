@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BookOpen, Eye, Trash2, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_URL } from '@/lib/api';
 
 interface Material {
   id: string;
@@ -28,29 +29,13 @@ const MyMaterialsPage: React.FC = () => {
   const fetchMaterials = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call with mock data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockMaterials: Material[] = [
-        {
-          id: '1',
-          titulo: 'Planeación de Matemáticas - Fracciones',
-          tipo_material: 'planeacion',
-          ultima_modificacion: '2024-01-15'
-        },
-        {
-          id: '2',
-          titulo: 'Rúbrica de Comprensión Lectora',
-          tipo_material: 'rubrica',
-          ultima_modificacion: '2024-01-14'
-        },
-        {
-          id: '3',
-          titulo: 'Actividades de Ciencias Naturales',
-          tipo_material: 'actividad',
-          ultima_modificacion: '2024-01-13'
+      const res = await fetch(`${API_URL}/materials`, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      ];
-      setMaterials(mockMaterials);
+      });
+      const data: Material[] = await res.json();
+      setMaterials(data);
     } catch (error) {
       toast({ title: "Error", description: "Error al cargar materiales", variant: "destructive" });
     } finally {

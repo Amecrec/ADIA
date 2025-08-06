@@ -47,7 +47,7 @@ const PlanningGeneratorPage: React.FC = () => {
     'De lo Humano y lo Comunitario'
   ];
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (field === 'nivelAcademico') {
       setFormData(prev => ({ ...prev, grado: '' }));
