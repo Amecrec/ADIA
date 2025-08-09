@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generador de Planeación Didáctica (NEM)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{--card:#ffffff;--muted:#f8fafc;--ring:#2563eb}*{font-family:Inter,system-ui,Arial}
+    .card{background:var(--card)} .muted{background:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;border:1px solid #e5e7eb;padding:.6rem 1rem;border-radius:.75rem}
+    .btn-primary{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+    .btn-outline{background:#fff}
+    .tab{cursor:pointer;padding:.6rem 1rem;border-bottom:2px solid transparent}
+    .tab.active{border-color:var(--ring);color:#1d4ed8;font-weight:600}
+    .section-title{font-weight:700;margin-bottom:.25rem}
+    .badge{font-size:.75rem;background:#eef2ff;color:#3730a3;border-radius:999px;padding:.15rem .5rem}
+    textarea{min-height:110px}
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="max-w-6xl mx-auto p-4 sm:p-8">
+    <div class="card rounded-2xl shadow-xl">
+      <div class="p-6 sm:p-10">
+        <header class="mb-6 text-center">
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-blue-700">Generador de Planeación Didáctica – NEM</h1>
+          <p class="text-gray-500 mt-2">Llena el formulario y genera: <span class="badge">Planeación</span> <span class="badge">Material</span> <span class="badge">Rúbrica</span> <span class="badge">Lista(s) de Cotejo</span></p>
+        </header>
+
+        <!-- FORM -->
+        <form id="planForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="col-span-1">
+            <label class="section-title">Grado / Nivel</label>
+            <select id="gradoEscolar" required class="w-full border rounded-xl p-3">
+              <option value="">Selecciona…</option>
+              <option>1º de primaria</option><option>2º de primaria</option><option>3º de primaria</option>
+              <option>4º de primaria</option><option>5º de primaria</option><option>6º de primaria</option>
+              <option>Secundaria</option><option>Bachillerato</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="section-title">Tipo de planeación</label>
+            <select id="tipoPlaneacion" required class="w-full border rounded-xl p-3">
+              <option value="">Selecciona…</option>
+              <option>Secuencial</option>
+              <option>Por Proyecto</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="section-title">Campos formativos</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-3 border rounded-xl">
+              <label class="inline-flex items-center gap-2"><input type="checkbox" value="Lenguajes" class="cf"> Lenguajes</label>
+              <label class="inline-flex items-center gap-2"><input type="checkbox" value="Saberes y Pensamiento Científico" class="cf"> Saberes y Pensamiento Científico</label>
+              <label class="inline-flex items-center gap-2"><input type="checkbox" value="Ética, Naturaleza y Sociedades" class="cf"> Ética, Naturaleza y Sociedades</label>
+              <label class="inline-flex items-center gap-2"><input type="checkbox" value="De lo Humano y lo Comunitario" class="cf"> De lo Humano y lo Comunitario</label>
+            </div>
+            <p id="hintCampos" class="text-xs text-gray-500 mt-1">Secuencial: 1 campo. Por Proyecto: mínimo 2.</p>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="section-title">Contenido(s) / Tema(s) central(es)</label>
+            <textarea id="contenidosTemas" class="w-full border rounded-xl p-3" placeholder="Ej.: Cuentos y narraciones; Comprensión lectora; Vocabulario"></textarea>
+          </div>
+
+          <div>
+            <label class="section-title">Número de sesiones</label>
+            <input id="numeroSesiones" type="number" min="1" class="w-full border rounded-xl p-3" placeholder="Ej.: 5" required>
+          </div>
+
+          <div>
+            <label class="section-title">Duración por sesión (min)</label>
+            <input id="duracionSesion" type="number" min="20" class="w-full border rounded-xl p-3" placeholder="Ej.: 50" required>
+          </div>
+
+          <div>
+            <label class="section-title">Tipo de escuela</label>
+            <select id="tipoEscuela" class="w-full border rounded-xl p-3">
+              <option>Pública urbana</option><option>Pública rural</option><option>Privada</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="section-title">Recursos disponibles</label>
+            <input id="recursosDisponibles" class="w-full border rounded-xl p-3" placeholder="Proyector, pizarra, libros">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="section-title">Perfil de grupo</label>
+            <textarea id="perfilGrupo" class="w-full border rounded-xl p-3" placeholder="Ej.: 25 estudiantes, lectura intermedia, 3 con TDAH, 1 con NEE"></textarea>
+          </div>
+        </form>
+
+        <!-- ACTIONS -->
+        <div class="flex flex-wrap items-center gap-3 mt-6">
+          <button id="btnPreview" class="btn btn-outline">Previsualizar JSON</button>
+          <button id="btnGenerate" class="btn btn-primary">Generar Planeación</button>
+          <button id="btnReset" class="btn btn-outline">Limpiar</button>
+        </div>
+
+        <!-- JSON PREVIEW -->
+        <div id="jsonBox" class="muted rounded-xl p-4 mt-4 hidden">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-gray-700">Vista previa de datos</span>
+            <button id="copyJson" class="text-sm underline">Copiar JSON</button>
+          </div>
+          <pre id="jsonPreview" class="text-xs mt-2 whitespace-pre-wrap"></pre>
+        </div>
+
+        <!-- OUTPUT TABS -->
+        <div class="mt-8">
+          <div class="flex gap-4 border-b">
+            <button class="tab active" data-tab="planeacion">Planeación</button>
+            <button class="tab" data-tab="material">Material de Apoyo</button>
+            <button class="tab" data-tab="rubrica">Rúbrica</button>
+            <button class="tab" data-tab="cotejo">Lista(s) de Cotejo</button>
+          </div>
+          <div id="panel-planeacion" class="p-4">
+            <p class="text-gray-500">Aún no generado. Completa el formulario y haz clic en <b>Generar Planeación</b>.</p>
+          </div>
+          <div id="panel-material" class="p-4 hidden"></div>
+          <div id="panel-rubrica" class="p-4 hidden"></div>
+          <div id="panel-cotejo" class="p-4 hidden"></div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="mt-8 text-center text-xs text-gray-400">
+          v1.0 – ADIA | Este generador construye el JSON y envía a <code>/api/generar-planeacion</code>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Helpers
+const $ = (q)=>document.querySelector(q);
+const $$ = (q)=>Array.from(document.querySelectorAll(q));
+const show = (el)=>{el.classList.remove('hidden')};
+const hide = (el)=>{el.classList.add('hidden')};
+
+// Tabs
+$$('.tab').forEach(t=>t.addEventListener('click',()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  ['planeacion','material','rubrica','cotejo'].forEach(id=>{
+    const p = $('#panel-'+id);
+    (t.dataset.tab===id)?show(p):hide(p);
+  });
+}));
+
+// Collect data
+function collectData(){
+  const campos = $$('.cf:checked').map(c=>c.value);
+  return {
+    GRADO_ESCOLAR: $('#gradoEscolar').value.trim(),
+    TIPO_PLANEACION: $('#tipoPlaneacion').value.trim(),
+    CAMPOS_FORMATIVOS: campos,
+    CONTENIDOS_TEMAS: $('#contenidosTemas').value.trim(),
+    NUMERO_SESIONES: Number($('#numeroSesiones').value||0),
+    DURACION_SESION: Number($('#duracionSesion').value||0),
+    TIPO_ESCUELA: $('#tipoEscuela').value.trim(),
+    RECURSOS_DISPONIBLES: $('#recursosDisponibles').value.trim(),
+    PERFIL_GRUPO: $('#perfilGrupo').value.trim()
+  };
+}
+
+// Validate
+function validate(data){
+  const errs = [];
+  if(!data.GRADO_ESCOLAR) errs.push('Selecciona el grado.');
+  if(!data.TIPO_PLANEACION) errs.push('Selecciona el tipo de planeación.');
+  if(data.TIPO_PLANEACION==='Secuencial' && data.CAMPOS_FORMATIVOS.length!==1) errs.push('Secuencial: selecciona exactamente 1 campo.');
+  if(data.TIPO_PLANEACION==='Por Proyecto' && data.CAMPOS_FORMATIVOS.length<2) errs.push('Por Proyecto: selecciona al menos 2 campos.');
+  if(!data.CONTENIDOS_TEMAS) errs.push('Indica contenidos o temas.');
+  if(data.NUMERO_SESIONES<1) errs.push('Número de sesiones inválido.');
+  if(data.DURACION_SESION<20) errs.push('Duración por sesión muy baja.');
+  return errs;
+}
+
+// Buttons
+$('#btnPreview').addEventListener('click', (e)=>{
+  e.preventDefault();
+  const data = collectData();
+  const errs = validate(data);
+  if(errs.length){ alert(errs.join('\n')); return; }
+  $('#jsonPreview').textContent = JSON.stringify(data, null, 2);
+  show($('#jsonBox'));
+});
+
+$('#copyJson').addEventListener('click', ()=>{
+  navigator.clipboard.writeText($('#jsonPreview').textContent).then(()=>{
+    alert('JSON copiado.');
+  });
+});
+
+$('#btnReset').addEventListener('click', (e)=>{
+  e.preventDefault();
+  $('#planForm').reset();
+  hide($('#jsonBox'));
+  $('#panel-planeacion').innerHTML = '<p class="text-gray-500">Aún no generado…</p>';
+  $('#panel-material').innerHTML = '';
+  $('#panel-rubrica').innerHTML = '';
+  $('#panel-cotejo').innerHTML = '';
+});
+
+// Submit
+$('#btnGenerate').addEventListener('click', async (e)=>{
+  e.preventDefault();
+  const data = collectData();
+  const errs = validate(data);
+  if(errs.length){ alert(errs.join('\n')); return; }
+
+  // Mostrar estado
+  $('#panel-planeacion').innerHTML = '<p class="text-sm text-gray-500">Generando…</p>';
+  $('#panel-material').innerHTML = '';
+  $('#panel-rubrica').innerHTML = '';
+  $('#panel-cotejo').innerHTML = '';
+
+  try {
+    const res = await fetch('/api/generar-planeacion', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    if(!res.ok) throw new Error('Error ' + res.status);
+    const out = await res.json();
+
+    // Esperamos un objeto: { planeacion: "...", material: "...", rubrica: "...", cotejo: "..." }
+    $('#panel-planeacion').innerHTML = out.planeacion ? formatText(out.planeacion) : '<em>Sin datos.</em>';
+    $('#panel-material').innerHTML   = out.material   ? formatText(out.material)   : '<em>Sin datos.</em>';
+    $('#panel-rubrica').innerHTML    = out.rubrica    ? formatText(out.rubrica)    : '<em>Sin datos.</em>';
+    $('#panel-cotejo').innerHTML     = out.cotejo     ? formatText(out.cotejo)     : '<em>Sin datos.</em>';
+  } catch(err){
+    console.error(err);
+    $('#panel-planeacion').innerHTML = '<p class="text-red-600 text-sm">No se pudo generar. Ver consola o endpoint.</p>';
+  }
+});
+
+// Utility: render simple markdown-ish
+function formatText(t){
+  // Escape basic HTML
+  t = t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Headings -> bold
+  t = t.replace(/^### (.*)$/gm,'<h3 class="font-bold text-lg mt-2">$1</h3>');
+  t = t.replace(/^## (.*)$/gm,'<h2 class="font-bold text-xl mt-3">$1</h2>');
+  t = t.replace(/^# (.*)$/gm,'<h1 class="font-bold text-2xl mt-4">$1</h1>');
+  // Lists
+  t = t.replace(/^\- (.*)$/gm,'<li class="ml-5 list-disc">$1</li>');
+  t = t.replace(/^\d+\.\s+(.*)$/gm,'<li class="ml-5 list-decimal">$1</li>');
+  // Paragraphs
+  t = t.replace(/(?:\r?\n){2,}/g,'</p><p>');
+  return '<div class="prose prose-sm max-w-none"><p>'+t+'</p></div>';
+}
+</script>
+</body>
+</html>
